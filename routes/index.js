@@ -33,8 +33,9 @@ router.get('/', function(req, res, next) {
   let db = new sqlite3.Database('./hello.sqlite');
   db.serialize(function() {
     db.serialize()
-    db.all(`SELECT rowid AS id, name, link, image, active, buklet, class, city FROM ${tableName}`, [], function(err, row) {
+    db.all(`SELECT rowid AS id, name, link, "3d", active, around, class, city, translation, image FROM ${tableName}`, [], function(err, row) {
       if (err){
+        console.log(err)
         res.error()
         throw err
       }
@@ -54,8 +55,8 @@ router.post('/', (req, res) => {
   console.log('req.body', req.body)
   let db = new sqlite3.Database('./hello.sqlite');
   db.serialize()
-  db.run('INSERT INTO example(name, link, city, class, image, active, buklet) VALUES(?, ?, ?, ?, ?, ?, ?)',
-      [req.body.name,req.body.link, req.body.city, req.body.class, req.body.image, req.body.active, req.body.buklet],
+  db.run('INSERT INTO example(name, link, city, class, "3d", active, translation, around, image) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.body.name,req.body.link, req.body.city, req.body.class, req.body['3d'], req.body.active, req.body.translation, req.body.around, req.body.image],
       (err) => {
     if(err) {
       res.status(500)
@@ -74,6 +75,27 @@ router.post('/', (req, res) => {
 })
 
 
+router.get('/delete/:id', (req, res) => {
+  let db = new sqlite3.Database('./hello.sqlite');
+  db.serialize()
+  db.run(`DELETE FROM example WHERE id=?`, req.params.id, function(err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Row(s) deleted`);
+    res.send({ success: true })
+  });
+  db.close((err) => {
+    if (err) {
+      res.send({ success: false })
+      throw err
+    }
+    console.log('Close the database connection.');
+  });
+
+})
+
+
 router.post('/upload-image', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.send({
@@ -88,20 +110,7 @@ router.post('/upload-image', upload.single('file'), (req, res) => {
     })
   }
 });
-router.post('/upload-buklet', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.send({
-      success: false
-    });
 
-  } else {
-    console.log(req.file)
-    return res.send({
-      success: true,
-      fileName: req.file.filename
-    })
-  }
-});
 
 
 router.get('/get-image/:id', (req, res) => {
@@ -125,44 +134,40 @@ router.get('/get-image/:id', (req, res) => {
   })
 })
 
-router.get('/get-buklet/:id', (req, res) => {
-  var options = {
-    root: path.join(__dirname, '../uploads-image'),
-    dotfiles: 'deny',
-    headers: {
-      'x-timestamp': Date.now(),
-      'x-sent': true
-    }
-  }
+// router.post('/upload-buklet', upload.single('file'), (req, res) => {
+//   if (!req.file) {
+//     return res.send({
+//       success: false
+//     });
+//
+//   } else {
+//     console.log(req.file)
+//     return res.send({
+//       success: true,
+//       fileName: req.file.filename
+//     })
+//   }
+// });
+//
+// router.get('/get-buklet/:id', (req, res) => {
+//   var options = {
+//     root: path.join(__dirname, '../uploads-image'),
+//     dotfiles: 'deny',
+//     headers: {
+//       'x-timestamp': Date.now(),
+//       'x-sent': true
+//     }
+//   }
+//
+//   var fileName = req.params.id
+//
+//   res.sendFile(fileName, options, function (err) {
+//     if (err) {
+//       res.status(403).send(err)
+//     } else {
+//       console.log('Sent:', fileName)
+//     }
+//   })
+// })
 
-  var fileName = req.params.id
-
-  res.sendFile(fileName, options, function (err) {
-    if (err) {
-      res.status(403).send(err)
-    } else {
-      console.log('Sent:', fileName)
-    }
-  })
-})
-
-router.get('/delete/:id', (req, res) => {
-  let db = new sqlite3.Database('./hello.sqlite');
-  db.serialize()
-  db.run(`DELETE FROM example WHERE id=?`, req.params.id, function(err) {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log(`Row(s) deleted`);
-    res.send({ success: true })
-  });
-  db.close((err) => {
-    if (err) {
-      res.send({ success: false })
-      throw err
-    }
-    console.log('Close the database connection.');
-  });
-
-})
 module.exports = router;
