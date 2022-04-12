@@ -111,10 +111,7 @@ router.post('/upload-image', upload.single('file'), (req, res) => {
   }
 });
 
-
-
-router.get('/get-image/:id', (req, res) => {
-  var options = {
+let options = {
     root: path.join(__dirname, '../uploads-image'),
     dotfiles: 'deny',
     headers: {
@@ -123,14 +120,27 @@ router.get('/get-image/:id', (req, res) => {
     }
   }
 
-  var fileName = req.params.id
+
+router.get('/get-image/:id', (req, res) => {
+//  let options = {
+//    root: path.join(__dirname, '../uploads-image'),
+//    dotfiles: 'deny',
+//    headers: {
+//      'x-timestamp': Date.now(),
+//      'x-sent': true
+//    }
+//  }
+
+  let fileName = req.params.id
   res.contentType('image/jpeg');
   res.sendFile(fileName, options, function (err) {
     if (err) {
-      res.status(403).send(err)
+	console.log(err)
+//      res.status(403).send(err)
     } else {
       console.log('Sent:', fileName)
     }
+    res.end()
   })
 })
 
